@@ -1,9 +1,9 @@
 /**
- * app.js - NPTEL PrepMaster AI Interactive Client Logic
+ * app.js - NPTEL PrepMaster AI Interactive Client Logic & Exam Engine
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // ================= STATE =================
+  // ================= APPLICATION STATE =================
   const state = {
     apiKey: localStorage.getItem('nptel_gemini_api_key') || '',
     currentPdfText: '',
@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     flashcards: {
       currentIndex: 0,
       isFlipped: false,
-      cards: []
+      cards: [],
+      masteredCount: 0
     },
     chat: {
       messages: []
@@ -45,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiKeyStatusText = document.getElementById('apiKeyStatusText');
   const btnQuickSample = document.getElementById('btnQuickSample');
   const noticeBanner = document.getElementById('noticeBanner');
+  const toastContainer = document.getElementById('toastContainer');
 
   // Upload & Customization
   const dropzone = document.getElementById('dropzone');
@@ -60,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectDifficulty = document.getElementById('selectDifficulty');
   const selectFocusMode = document.getElementById('selectFocusMode');
   const mcqCountButtons = document.querySelectorAll('.mcq-count-btn');
+  const mcqCountSummaryLabel = document.getElementById('mcqCountSummaryLabel');
   const sampleCourseChips = document.querySelectorAll('.btn-sample-chip');
   const btnLoadLocalSamplePdf = document.getElementById('btnLoadLocalSamplePdf');
 
@@ -115,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resAccuracy = document.getElementById('resAccuracy');
   const resTimeTaken = document.getElementById('resTimeTaken');
   const resultFeedback = document.getElementById('resultFeedback');
+  const resultBadgeIcon = document.getElementById('resultBadgeIcon');
   const btnReviewAnswersFromModal = document.getElementById('btnReviewAnswersFromModal');
   const btnRetakeFromModal = document.getElementById('btnRetakeFromModal');
 
@@ -149,21 +153,52 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnExportMarkdown = document.getElementById('btnExportMarkdown');
   const btnExportJson = document.getElementById('btnExportJson');
 
+  // ================= TOAST NOTIFICATION SYSTEM =================
+  function showToast(msg, type = "info") {
+    const toast = document.createElement('div');
+    toast.className = 'toast-enter pointer-events-auto flex items-center gap-3 p-4 rounded-2xl glass-card border shadow-xl text-xs sm:text-sm font-semibold max-w-sm transition-all duration-300';
+    
+    let icon = "fa-circle-info text-blue-500";
+    if (type === "success") icon = "fa-circle-check text-emerald-500";
+    if (type === "warning") icon = "fa-triangle-exclamation text-amber-500";
+    if (type === "error") icon = "fa-circle-exclamation text-rose-500";
+
+    toast.innerHTML = `
+      <i class="fa-solid ${icon} text-base shrink-0"></i>
+      <span class="flex-1 leading-snug">${msg}</span>
+      <button class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition ml-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    `;
+
+    toast.querySelector('button').addEventListener('click', () => {
+      toast.classList.replace('toast-enter', 'toast-exit');
+      setTimeout(() => toast.remove(), 200);
+    });
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.classList.replace('toast-enter', 'toast-exit');
+        setTimeout(() => toast.remove(), 200);
+      }
+    }, 4000);
+  }
+
   // ================= INITIALIZATION =================
   initTheme();
   updateApiKeyUI();
 
-  // Load sample courses on click
   btnQuickSample.addEventListener('click', () => {
     loadSampleCourse('cloud_computing');
   });
 
-  // Check health on start
   fetch('/api/health')
     .then(r => r.json())
     .then(data => {
       if (data.has_env_gemini_key && !state.apiKey) {
-        apiKeyStatusText.innerText = "Gemini (Server Key Active)";
+        apiKeyStatusText.innerHTML = '<span class="text-emerald-500 font-bold">Gemini Active ✓</span>';
       }
     })
     .catch(() => {});
@@ -182,15 +217,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.toggle('dark');
     const isDark = document.documentElement.classList.contains('dark');
     localStorage.setItem('nptel_theme', isDark ? 'dark' : 'light');
+    showToast(isDark ? "Switched to Dark Mode" : "Switched to Light Mode", "info");
   });
 
   // ================= API KEY MANAGEMENT =================
   function updateApiKeyUI() {
     if (state.apiKey) {
-      apiKeyStatusText.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Gemini Key ✓</span>';
+      apiKeyStatusText.innerHTML = '<span class="text-emerald-600 dark:text-emerald-400 font-bold">Gemini Key ✓</span>';
       inputApiKey.value = state.apiKey;
     } else {
-      apiKeyStatusText.innerText = 'Gemini API Key';
+      apiKeyStatusText.innerText = 'Gemini Key';
       inputApiKey.value = '';
     }
   }
@@ -213,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (key) {
       state.apiKey = key;
       localStorage.setItem('nptel_gemini_api_key', key);
-      showNotice("Gemini API Key saved! Live AI analysis will now power your study kit generation and doubts.", "success");
+      showToast("Gemini API Key saved! Live AI analysis is now active.", "success");
     }
     updateApiKeyUI();
     apiKeyModal.classList.add('hidden');
@@ -224,31 +260,31 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('nptel_gemini_api_key');
     updateApiKeyUI();
     apiKeyModal.classList.add('hidden');
-    showNotice("API Key removed. Running in smart offline demo mode.", "info");
+    showToast("API Key removed. Switched to smart offline engine.", "info");
   });
 
-  // Banner notification helper
+  // Dynamic Notice Banner
   function showNotice(msg, type = "info") {
     noticeBanner.classList.remove('hidden', 'bg-emerald-50', 'bg-blue-50', 'bg-amber-50', 'border-emerald-200', 'border-blue-200', 'border-amber-200', 'text-emerald-800', 'text-blue-800', 'text-amber-800', 'dark:bg-emerald-950/60', 'dark:bg-blue-950/60', 'dark:bg-amber-950/60');
     
-    let colorClasses = "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200";
-    let icon = "fa-circle-info";
+    let colorClasses = "bg-blue-50/90 border border-blue-200 text-blue-900 dark:bg-blue-950/60 dark:border-blue-800 dark:text-blue-200";
+    let icon = "fa-circle-info text-blue-600";
     
     if (type === "success") {
-      colorClasses = "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200";
-      icon = "fa-circle-check";
+      colorClasses = "bg-emerald-50/90 border border-emerald-200 text-emerald-900 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-200";
+      icon = "fa-circle-check text-emerald-600";
     } else if (type === "warning") {
-      colorClasses = "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200";
-      icon = "fa-triangle-exclamation";
+      colorClasses = "bg-amber-50/90 border border-amber-200 text-amber-900 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-200";
+      icon = "fa-triangle-exclamation text-amber-600";
     }
 
-    noticeBanner.className = `p-4 rounded-xl border text-xs sm:text-sm font-medium flex items-center justify-between gap-3 ${colorClasses}`;
+    noticeBanner.className = `p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 shadow-sm ${colorClasses}`;
     noticeBanner.innerHTML = `
-      <div class="flex items-center gap-2">
-        <i class="fa-solid ${icon}"></i>
+      <div class="flex items-center gap-3">
+        <i class="fa-solid ${icon} text-base"></i>
         <span>${msg}</span>
       </div>
-      <button onclick="document.getElementById('noticeBanner').classList.add('hidden')" class="text-xs opacity-60 hover:opacity-100">
+      <button onclick="document.getElementById('noticeBanner').classList.add('hidden')" class="text-xs opacity-60 hover:opacity-100 p-1">
         <i class="fa-solid fa-xmark"></i>
       </button>
     `;
@@ -258,12 +294,15 @@ document.addEventListener('DOMContentLoaded', () => {
   mcqCountButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       mcqCountButtons.forEach(b => {
-        b.classList.remove('border-blue-600', 'bg-blue-50', 'dark:bg-blue-950/60', 'text-blue-600', 'dark:text-blue-300');
-        b.classList.add('border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
+        b.classList.remove('border-2', 'border-blue-600', 'bg-blue-50', 'dark:bg-blue-950/80', 'text-blue-600', 'dark:text-blue-300');
+        b.classList.add('border', 'border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
       });
-      btn.classList.remove('border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
-      btn.classList.add('border-blue-600', 'bg-blue-50', 'dark:bg-blue-950/60', 'text-blue-600', 'dark:text-blue-300');
-      state.selectedMcqCount = parseInt(btn.getAttribute('data-mcq-count'), 10);
+      btn.classList.remove('border', 'border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
+      btn.classList.add('border-2', 'border-blue-600', 'bg-blue-50', 'dark:bg-blue-950/80', 'text-blue-600', 'dark:text-blue-300');
+      
+      const count = parseInt(btn.getAttribute('data-mcq-count'), 10);
+      state.selectedMcqCount = count;
+      if (mcqCountSummaryLabel) mcqCountSummaryLabel.innerText = `${count} Questions`;
     });
   });
 
@@ -272,18 +311,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   dropzone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropzone.classList.add('border-blue-500', 'bg-blue-50/40', 'dark:bg-blue-950/20');
+    dropzone.classList.add('dropzone-active');
   });
 
   ['dragleave', 'dragend'].forEach(type => {
     dropzone.addEventListener(type, () => {
-      dropzone.classList.remove('border-blue-500', 'bg-blue-50/40', 'dark:bg-blue-950/20');
+      dropzone.classList.remove('dropzone-active');
     });
   });
 
   dropzone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropzone.classList.remove('border-blue-500', 'bg-blue-50/40', 'dark:bg-blue-950/20');
+    dropzone.classList.remove('dropzone-active');
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileSelected(e.dataTransfer.files[0]);
     }
@@ -302,23 +341,23 @@ document.addEventListener('DOMContentLoaded', () => {
     dropzoneContentDefault.classList.remove('hidden');
     state.currentPdfText = '';
     state.currentFilename = '';
+    showToast("File cleared. Select or drop a new PDF.", "info");
   });
 
   async function handleFileSelected(file) {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Please upload a valid PDF file.');
+      showToast('Please upload a valid PDF document.', 'warning');
       return;
     }
 
     selectedFileName.innerText = file.name;
     selectedFileSize.innerText = formatFileSize(file.size);
-    selectedPageCount.innerText = 'Extracting...';
-    selectedWordCount.innerText = '...';
+    selectedPageCount.innerText = 'Extracting pages...';
+    selectedWordCount.innerText = 'Analyzing...';
 
     dropzoneContentDefault.classList.add('hidden');
     dropzoneContentSelected.classList.remove('hidden');
 
-    // Upload to server for text extraction
     const formData = new FormData();
     formData.append('file', file);
 
@@ -330,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.detail || 'Failed to parse PDF.');
+        throw new Error(data.detail || 'Failed to extract text from PDF.');
       }
 
       state.currentPdfText = data.full_text;
@@ -338,9 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
       selectedPageCount.innerText = `${data.total_pages} Pages`;
       selectedWordCount.innerText = `${data.total_words} Words`;
 
-      showNotice(`Successfully parsed "${data.filename}" (${data.total_pages} pages, ${data.total_words} words). Click 'Generate NPTEL Study Kit' to begin!`, "success");
+      showToast(`Extracted ${data.total_pages} pages successfully!`, "success");
+      showNotice(`"${data.filename}" is loaded and ready. Configure your preferences and click "Generate NPTEL Study Kit".`, "success");
     } catch (err) {
-      alert(`Error reading PDF: ${err.message}`);
+      showToast(`Error: ${err.message}`, "error");
       dropzoneContentSelected.classList.add('hidden');
       dropzoneContentDefault.classList.remove('hidden');
     }
@@ -352,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
-  // ================= LOAD SAMPLE COURSES =================
+  // ================= LOAD PRELOADED SAMPLE COURSES =================
   sampleCourseChips.forEach(chip => {
     chip.addEventListener('click', () => {
       const courseId = chip.getAttribute('data-course');
@@ -361,48 +401,44 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnLoadLocalSamplePdf.addEventListener('click', async () => {
-    try {
-      showNotice("Loading generated sample NPTEL lecture note...", "info");
-      loadSampleCourse('cloud_computing');
-    } catch (e) {
-      alert("Error loading sample: " + e.message);
-    }
+    showToast("Loading pre-generated sample NPTEL lecture PDF...", "info");
+    loadSampleCourse('cloud_computing');
   });
 
   async function loadSampleCourse(courseId) {
     try {
       showProgressBar(true);
-      updateProgressStep(1, "Loading NPTEL Course Module...", 40);
+      updateProgressStep(1, "Loading NPTEL Module Courseware...", 35);
 
       const res = await fetch(`/api/sample-courses/${courseId}`);
       const json = await res.json();
 
       setTimeout(() => {
-        updateProgressStep(3, "Formatting TCS iON Quiz & Flashcards...", 85);
+        updateProgressStep(3, "Synthesizing TCS iON Quiz & Flashcards...", 80);
         setTimeout(() => {
           hideProgressBar();
           renderStudyKit(json.data);
-          showNotice(`Loaded sample NPTEL course: "${json.data.title}"`, "success");
+          showToast(`Loaded ${json.data.title}!`, "success");
           studyKitSection.scrollIntoView({ behavior: 'smooth' });
-        }, 300);
-      }, 400);
+        }, 350);
+      }, 350);
 
     } catch (err) {
       hideProgressBar();
-      alert("Failed to load sample course: " + err.message);
+      showToast("Failed to load sample course: " + err.message, "error");
     }
   }
 
-  // ================= GENERATE STUDY KIT ACTION =================
+  // ================= GENERATE STUDY KIT PIPELINE =================
   btnGenerateKit.addEventListener('click', async () => {
     if (!state.currentPdfText || state.currentPdfText.length < 10) {
-      alert("Please upload a PDF file first, or select one of the preloaded sample NPTEL courses below!");
+      showToast("Please upload a lecture PDF or choose one of the preloaded courses below!", "warning");
       return;
     }
 
     try {
       showProgressBar(true);
-      updateProgressStep(1, "Analyzing lecture notes and extracting key concepts...", 25);
+      updateProgressStep(1, "Parsing pages, formulas, and structural headings...", 25);
 
       const payload = {
         text: state.currentPdfText,
@@ -414,12 +450,12 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       const stepTimer1 = setTimeout(() => {
-        updateProgressStep(2, "Formulating NPTEL assignment-style MCQs...", 50);
-      }, 1500);
+        updateProgressStep(2, "Formulating NPTEL assignment-style MCQs & MSQs...", 50);
+      }, 1400);
 
       const stepTimer2 = setTimeout(() => {
-        updateProgressStep(3, "Synthesizing deep explanations and formulas...", 75);
-      }, 3500);
+        updateProgressStep(3, "Synthesizing deep conceptual breakdowns & analogies...", 75);
+      }, 3000);
 
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -435,21 +471,20 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.detail || 'Generation failed.');
       }
 
-      updateProgressStep(4, "Finalizing Study Kit...", 100);
+      updateProgressStep(4, "Finalizing TCS iON exam simulation...", 100);
       setTimeout(() => {
         hideProgressBar();
         renderStudyKit(data.data);
         if (data.data.fallback_notice) {
           showNotice(data.data.fallback_notice, data.data.ai_mode === 'live_gemini' ? "success" : "warning");
-        } else {
-          showNotice("NPTEL Study Kit & Exam Simulator generated successfully!", "success");
         }
+        showToast("NPTEL Study Kit generated successfully!", "success");
         studyKitSection.scrollIntoView({ behavior: 'smooth' });
-      }, 400);
+      }, 350);
 
     } catch (err) {
       hideProgressBar();
-      alert(`Generation failed: ${err.message}`);
+      showToast(`Generation failed: ${err.message}`, "error");
     }
   });
 
@@ -480,17 +515,16 @@ document.addEventListener('DOMContentLoaded', () => {
     state.studyKit = data;
     studyKitSection.classList.remove('hidden');
 
-    // Header info
     studyKitTitle.innerText = data.title || "NPTEL Lecture Module";
     studyKitOverview.innerText = data.overview || "Comprehensive NPTEL study kit.";
     badgeWeekTopic.innerText = data.week_or_topic || data.week || "NPTEL Certified";
     
     if (data.ai_mode === 'live_gemini') {
-      badgeAiMode.innerText = `AI Mode: Gemini 2.5 Flash (${data.model_used || 'Live'})`;
-      badgeAiMode.className = "px-2.5 py-0.5 text-xs font-semibold rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300";
+      badgeAiMode.innerText = `Gemini 2.5 Flash (${data.model_used || 'Live AI'})`;
+      badgeAiMode.className = "px-3 py-1 text-xs font-bold rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
     } else {
-      badgeAiMode.innerText = "Mode: Smart NPTEL Engine";
-      badgeAiMode.className = "px-2.5 py-0.5 text-xs font-semibold rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300";
+      badgeAiMode.innerText = "Smart NPTEL Engine (Offline Mode)";
+      badgeAiMode.className = "px-3 py-1 text-xs font-bold rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
     }
 
     const mcqs = data.mcqs || [];
@@ -501,18 +535,15 @@ document.addEventListener('DOMContentLoaded', () => {
     statFlashcardCount.innerText = flashcards.length;
     statReadTime.innerText = `${Math.max(10, Math.round(mcqs.length * 1.5))}m`;
 
-    // Initialize modules
     initQuiz(mcqs);
     renderKeyPoints(data.key_points || []);
     renderExplanations(data.conceptual_explanations || []);
     initFlashcards(flashcards);
     initDoubts(data.sample_doubts || []);
 
-    // Render KaTeX math in the whole section
-    setTimeout(renderMath, 100);
+    setTimeout(renderMath, 150);
   }
 
-  // Helper to trigger KaTeX auto-render
   function renderMath() {
     if (window.renderMathInElement) {
       renderMathInElement(studyKitSection, {
@@ -530,15 +561,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const targetTab = btn.getAttribute('data-tab');
 
-      // Update button styling
       tabButtons.forEach(b => {
         b.classList.remove('active', 'border-blue-600', 'text-blue-600', 'dark:text-blue-400', 'font-bold');
-        b.classList.add('border-transparent', 'text-slate-600', 'dark:text-slate-400', 'font-medium');
+        b.classList.add('border-transparent', 'text-slate-600', 'dark:text-slate-400', 'font-semibold');
       });
       btn.classList.add('active', 'border-blue-600', 'text-blue-600', 'dark:text-blue-400', 'font-bold');
-      btn.classList.remove('border-transparent', 'text-slate-600', 'dark:text-slate-400', 'font-medium');
+      btn.classList.remove('border-transparent', 'text-slate-600', 'dark:text-slate-400', 'font-semibold');
 
-      // Update content visibility
       tabContents.forEach(c => c.classList.add('hidden'));
       const activeContent = document.getElementById(`tabContent_${targetTab}`);
       if (activeContent) {
@@ -557,20 +586,17 @@ document.addEventListener('DOMContentLoaded', () => {
     state.quiz.filterMode = 'all';
     state.quiz.timeTakenSeconds = 0;
 
-    // Reset status of all questions
     mcqs.forEach((q, idx) => {
       state.quiz.questionStatuses[q.id] = idx === 0 ? 'not_answered' : 'not_visited';
       state.quiz.userAnswers[q.id] = [];
     });
 
-    // Reset UI
-    quizModeBadge.innerText = "Exam Mode Active";
-    quizModeBadge.className = "px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200";
+    quizModeBadge.innerText = "Timed Proctored Exam Active";
+    quizModeBadge.className = "text-[11px] font-semibold text-amber-600 dark:text-amber-400";
     btnSubmitExam.classList.remove('hidden');
     quizReviewOptions.classList.add('hidden');
     qHintContainer.classList.add('hidden');
 
-    // Timer setup (1.5 minutes per question)
     clearInterval(state.quiz.timerInterval);
     state.quiz.timerSeconds = Math.max(5, mcqs.length) * 90;
     startTimer();
@@ -586,9 +612,13 @@ document.addEventListener('DOMContentLoaded', () => {
       state.quiz.timeTakenSeconds++;
       updateTimerDisplay();
 
+      if (state.quiz.timerSeconds === 120) {
+        showToast("⚠️ 2 minutes remaining! Review your answers.", "warning");
+      }
+
       if (state.quiz.timerSeconds <= 0) {
         clearInterval(state.quiz.timerInterval);
-        alert("Time is up! Submitting your NPTEL exam now.");
+        showToast("Time's up! Automatically submitting your exam...", "info");
         submitExam();
       }
     }, 1000);
@@ -603,18 +633,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderPalette() {
     paletteButtonsContainer.innerHTML = '';
     const mcqs = state.studyKit.mcqs || [];
-
     let answeredCount = 0;
 
     mcqs.forEach((q, idx) => {
       const status = state.quiz.questionStatuses[q.id] || 'not_visited';
       const isCurrent = idx === state.quiz.currentQuestionIndex;
 
+      // Filter in review mode
+      if (state.quiz.isSubmitted && state.quiz.filterMode === 'mistakes') {
+        const userAns = (state.quiz.userAnswers[q.id] || []).slice().sort();
+        const trueAns = (q.correct_answers || []).slice().sort();
+        const isCorrect = userAns.length === trueAns.length && userAns.every((val, i) => val === trueAns[i]);
+        if (isCorrect) return; // skip correct questions when filtering mistakes
+      }
+
       const btn = document.createElement('button');
-      btn.className = `palette-btn w-9 h-9 rounded-lg font-bold text-xs flex items-center justify-center border transition ${isCurrent ? 'palette-current ring-2 ring-blue-500' : ''}`;
+      btn.className = `palette-btn w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-heading font-black text-xs sm:text-sm flex items-center justify-center border transition-all ${isCurrent ? 'palette-current ring-2 ring-blue-500 scale-105' : ''}`;
       btn.innerText = idx + 1;
 
-      // Class based on status
       if (status === 'answered') {
         btn.classList.add('palette-answered');
         answeredCount++;
@@ -624,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('palette-answered-marked');
         answeredCount++;
       } else if (status === 'not_answered') {
-        btn.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        btn.classList.add('palette-not-answered');
       } else {
         btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300', 'border-slate-300', 'dark:border-slate-700');
       }
@@ -658,7 +694,6 @@ document.addEventListener('DOMContentLoaded', () => {
     qMarksDisplay.innerText = q.type === 'multiple' ? '+2.0 / -0.0 Marks' : '+1.0 / -0.0 Marks';
     qTextDisplay.innerHTML = q.question;
 
-    // Hint text
     if (q.hint && (state.quiz.isSubmitted || selectFocusMode.value === "Rapid Revision")) {
       qHintContainer.classList.remove('hidden');
       qHintText.innerHTML = q.hint;
@@ -666,59 +701,53 @@ document.addEventListener('DOMContentLoaded', () => {
       qHintContainer.classList.add('hidden');
     }
 
-    // Render Options
     qOptionsContainer.innerHTML = '';
     const selectedAnswers = state.quiz.userAnswers[q.id] || [];
+    const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
     q.options.forEach((optText, optIdx) => {
       const isSelected = selectedAnswers.includes(optIdx);
       const isCorrect = (q.correct_answers || []).includes(optIdx);
+      const letter = optionLetters[optIdx] || `${optIdx + 1}`;
 
       const optDiv = document.createElement('div');
-      optDiv.className = `p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition cursor-pointer flex items-start gap-3 select-none`;
+      optDiv.className = `option-card p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-3 select-none`;
 
       if (state.quiz.isSubmitted) {
-        // Review Mode styling
         if (isCorrect) {
-          optDiv.className += ' bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200';
+          optDiv.className += ' bg-emerald-50 dark:bg-emerald-950/70 border-emerald-500 text-emerald-900 dark:text-emerald-100 shadow-sm';
         } else if (isSelected && !isCorrect) {
-          optDiv.className += ' bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-900 dark:text-rose-200';
+          optDiv.className += ' bg-rose-50 dark:bg-rose-950/70 border-rose-500 text-rose-900 dark:text-rose-100 shadow-sm';
         } else {
-          optDiv.className += ' bg-white dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 opacity-70';
+          optDiv.className += ' bg-white/40 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60';
         }
       } else {
-        // Exam Mode styling
         if (isSelected) {
-          optDiv.className += ' bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-900 dark:text-blue-100 shadow-sm';
+          optDiv.className += ' option-selected';
         } else {
-          optDiv.className += ' bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-blue-500';
+          optDiv.className += ' bg-white/80 dark:bg-slate-850/80 border-slate-200 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-blue-500 shadow-sm';
         }
       }
 
-      // Checkbox / Radio indicator
-      let icon = '';
+      let badgeHtml = '';
       if (state.quiz.isSubmitted) {
         if (isCorrect) {
-          icon = '<i class="fa-solid fa-circle-check text-emerald-600 text-base mt-0.5"></i>';
+          badgeHtml = '<span class="w-7 h-7 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center shrink-0 shadow-sm"><i class="fa-solid fa-check"></i></span>';
         } else if (isSelected) {
-          icon = '<i class="fa-solid fa-circle-xmark text-rose-500 text-base mt-0.5"></i>';
+          badgeHtml = '<span class="w-7 h-7 rounded-xl bg-rose-500 text-white font-bold flex items-center justify-center shrink-0 shadow-sm"><i class="fa-solid fa-xmark"></i></span>';
         } else {
-          icon = '<span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></span>';
+          badgeHtml = `<span class="w-7 h-7 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-400 font-bold flex items-center justify-center shrink-0 text-xs">${letter}</span>`;
         }
       } else {
-        if (q.type === 'multiple') {
-          icon = isSelected 
-            ? '<i class="fa-solid fa-square-check text-blue-600 text-base mt-0.5"></i>' 
-            : '<span class="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></span>';
+        if (isSelected) {
+          badgeHtml = `<span class="w-7 h-7 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center shrink-0 shadow-sm text-xs">${letter}</span>`;
         } else {
-          icon = isSelected 
-            ? '<i class="fa-solid fa-circle-dot text-blue-600 text-base mt-0.5"></i>' 
-            : '<span class="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></span>';
+          badgeHtml = `<span class="w-7 h-7 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold flex items-center justify-center shrink-0 text-xs">${letter}</span>`;
         }
       }
 
       optDiv.innerHTML = `
-        ${icon}
+        ${badgeHtml}
         <div class="flex-1 leading-relaxed">${optText}</div>
       `;
 
@@ -741,31 +770,29 @@ document.addEventListener('DOMContentLoaded', () => {
       qOptionsContainer.appendChild(optDiv);
     });
 
-    // If submitted, show full explanation box right below question
     if (state.quiz.isSubmitted) {
       const expDiv = document.createElement('div');
-      expDiv.className = 'mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs sm:text-sm text-slate-800 dark:text-slate-200 space-y-2';
+      expDiv.className = 'mt-5 p-5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 text-xs sm:text-sm text-slate-800 dark:text-slate-200 space-y-2 shadow-sm';
       expDiv.innerHTML = `
-        <div class="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-          <i class="fa-solid fa-graduation-cap"></i>
+        <div class="font-heading font-black text-blue-700 dark:text-blue-300 flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-base"></i>
           <span>Official Solution & Explanation:</span>
         </div>
-        <p class="leading-relaxed">${q.explanation || 'Detailed explanation will be provided by NPTEL TA.'}</p>
+        <p class="leading-relaxed font-normal">${q.explanation || 'Detailed solution.'}</p>
         <div class="text-[11px] text-slate-500 font-semibold pt-1">
-          Topic: <span class="text-blue-600 dark:text-blue-400">${q.topic_tag || 'Core Concept'}</span>
+          Topic: <span class="text-blue-600 dark:text-blue-400 font-bold">${q.topic_tag || 'Core Concept'}</span>
         </div>
       `;
       qOptionsContainer.appendChild(expDiv);
     }
 
-    // Previous / Next button labels
     btnPrevQuestion.disabled = state.quiz.currentQuestionIndex === 0;
     btnPrevQuestion.classList.toggle('opacity-40', state.quiz.currentQuestionIndex === 0);
 
     if (state.quiz.currentQuestionIndex === mcqs.length - 1) {
-      btnSaveAndNext.innerHTML = state.quiz.isSubmitted ? 'Finish Review' : 'Save & Submit Exam <i class="fa-solid fa-check ml-1"></i>';
+      btnSaveAndNext.innerHTML = state.quiz.isSubmitted ? 'Finish Review' : 'Save & Submit Exam <i class="fa-solid fa-check ml-1.5"></i>';
     } else {
-      btnSaveAndNext.innerHTML = 'Save & Next <i class="fa-solid fa-arrow-right ml-1"></i>';
+      btnSaveAndNext.innerHTML = 'Save & Next <i class="fa-solid fa-arrow-right ml-1.5"></i>';
     }
 
     renderMath();
@@ -790,7 +817,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Save & Next Action
   btnSaveAndNext.addEventListener('click', () => {
     saveCurrentQuestionStatus(false);
     const mcqs = state.studyKit.mcqs || [];
@@ -805,14 +831,11 @@ document.addEventListener('DOMContentLoaded', () => {
       renderCurrentQuestion();
     } else {
       if (!state.quiz.isSubmitted) {
-        if (confirm("You are on the last question. Would you like to submit your test now?")) {
-          submitExam();
-        }
+        submitExam();
       }
     }
   });
 
-  // Mark for Review & Next
   btnMarkForReview.addEventListener('click', () => {
     saveCurrentQuestionStatus(true);
     const mcqs = state.studyKit.mcqs || [];
@@ -824,11 +847,11 @@ document.addEventListener('DOMContentLoaded', () => {
         state.quiz.questionStatuses[nextQ.id] = 'not_answered';
       }
     }
+    showToast("Question marked for review!", "info");
     renderPalette();
     renderCurrentQuestion();
   });
 
-  // Clear Response
   btnClearResponse.addEventListener('click', () => {
     const mcqs = state.studyKit.mcqs || [];
     const q = mcqs[state.quiz.currentQuestionIndex];
@@ -836,11 +859,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.quiz.userAnswers[q.id] = [];
     state.quiz.questionStatuses[q.id] = 'not_answered';
+    showToast("Response cleared.", "info");
     renderPalette();
     renderCurrentQuestion();
   });
 
-  // Previous Question
   btnPrevQuestion.addEventListener('click', () => {
     if (state.quiz.currentQuestionIndex > 0) {
       saveCurrentQuestionStatus(false);
@@ -850,22 +873,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Submit Exam
   btnSubmitExam.addEventListener('click', () => {
-    if (confirm("Are you sure you want to finish and submit your NPTEL practice exam?")) {
-      submitExam();
-    }
+    submitExam();
   });
 
   function submitExam() {
     clearInterval(state.quiz.timerInterval);
     state.quiz.isSubmitted = true;
 
-    // Calculate score
     const mcqs = state.studyKit.mcqs || [];
-    let correctCount = 0;
-    let totalMarks = 0;
     let earnedMarks = 0;
+    let totalMarks = 0;
 
     mcqs.forEach(q => {
       const qMarks = q.type === 'multiple' ? 2 : 1;
@@ -874,9 +892,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const userAns = (state.quiz.userAnswers[q.id] || []).slice().sort();
       const trueAns = (q.correct_answers || []).slice().sort();
 
-      const isExact = userAns.length === trueAns.length && userAns.every((val, index) => val === trueAns[index]);
+      const isExact = userAns.length === trueAns.length && userAns.every((val, i) => val === trueAns[i]);
       if (isExact) {
-        correctCount++;
         earnedMarks += qMarks;
       }
     });
@@ -886,32 +903,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const accuracy = Math.round((earnedMarks / (totalMarks || 1)) * 100);
     state.quiz.accuracy = accuracy;
 
-    // Determine NPTEL Tier
     let tierText = "";
     let feedback = "";
-    let iconClass = "fa-award";
+    let badgeColor = "bg-amber-100 text-amber-500";
 
     if (accuracy >= 90) {
       tierText = "🥇 Elite + Gold Certificate Tier (Top 1-2%)";
       feedback = "Outstanding! You scored in the top tier (>=90%) of NPTEL candidates. You are in prime shape to top the exam!";
+      badgeColor = "bg-amber-100 text-amber-500 shadow-amber-500/30";
       triggerConfetti();
     } else if (accuracy >= 75) {
       tierText = "🥈 Elite + Silver Certificate Tier";
-      feedback = "Excellent mastery! Scoring >=75% qualifies you for the coveted Elite + Silver certification badge.";
+      feedback = "Excellent mastery! Scoring >=75% qualifies you for the prestigious Elite + Silver certification badge.";
+      badgeColor = "bg-slate-200 text-slate-700 shadow-slate-500/30";
       triggerConfetti();
     } else if (accuracy >= 60) {
       tierText = "🎖️ Elite Certificate Tier";
       feedback = "Good job! You have comfortably crossed the 60% mark to secure the Elite Certificate.";
+      badgeColor = "bg-blue-100 text-blue-600";
     } else if (accuracy >= 40) {
       tierText = "📜 Qualified / Successfully Completed Tier";
-      feedback = "You passed the NPTEL minimum cutoff (>=40%). Review your mistakes below to reach the Elite bracket!";
+      feedback = "You passed the NPTEL minimum cutoff (>=40%). Review your mistakes to reach the Elite bracket!";
+      badgeColor = "bg-emerald-100 text-emerald-600";
     } else {
       tierText = "⚠️ Needs Focused Revision (<40% Cutoff)";
-      feedback = "NPTEL passing criteria requires >=40% in proctored exam. Use the Key Points and Deep Explanations tabs to reinforce weak topics.";
-      iconClass = "fa-triangle-exclamation";
+      feedback = "NPTEL passing criteria requires >=40% in the proctored exam. Review the Key Points and Deep Explanations tabs to reinforce weak topics.";
+      badgeColor = "bg-rose-100 text-rose-500";
     }
 
-    // Update Results Modal
+    resultBadgeIcon.className = `w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-lg ${badgeColor}`;
     resultTitle.innerText = `NPTEL Exam Scorecard`;
     resultTierText.innerText = tierText;
     resTotalScore.innerText = `${earnedMarks} / ${totalMarks}`;
@@ -922,12 +942,10 @@ document.addEventListener('DOMContentLoaded', () => {
     resTimeTaken.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     resultFeedback.innerText = feedback;
 
-    // Show Results Modal
     resultsModal.classList.remove('hidden');
 
-    // Update Quiz Page for Review
     quizModeBadge.innerText = "Review & Solutions Mode";
-    quizModeBadge.className = "px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-200";
+    quizModeBadge.className = "text-[11px] font-bold text-emerald-600 dark:text-emerald-400";
     btnSubmitExam.classList.add('hidden');
     quizReviewOptions.classList.remove('hidden');
 
@@ -938,14 +956,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function triggerConfetti() {
     if (window.confetti) {
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 80,
         origin: { y: 0.6 }
       });
     }
   }
 
-  // Results Modal Buttons
   btnCloseResultsModal.addEventListener('click', () => resultsModal.classList.add('hidden'));
   btnReviewAnswersFromModal.addEventListener('click', () => {
     resultsModal.classList.add('hidden');
@@ -961,18 +978,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initQuiz(state.studyKit.mcqs || []);
   });
 
-  // Filter mistakes
   filterAllQuestions.addEventListener('click', () => {
     state.quiz.filterMode = 'all';
-    filterAllQuestions.className = "px-2 py-1 text-xs rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-medium";
-    filterWrongQuestions.className = "px-2 py-1 text-xs rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium";
+    filterAllQuestions.className = "px-3 py-1.5 text-xs rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold transition";
+    filterWrongQuestions.className = "px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 transition";
     renderPalette();
   });
 
   filterWrongQuestions.addEventListener('click', () => {
     state.quiz.filterMode = 'mistakes';
-    filterWrongQuestions.className = "px-2 py-1 text-xs rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-medium";
-    filterAllQuestions.className = "px-2 py-1 text-xs rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium";
+    filterWrongQuestions.className = "px-3 py-1.5 text-xs rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold transition";
+    filterAllQuestions.className = "px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 transition";
     renderPalette();
   });
 
@@ -986,7 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     points.forEach((kp, idx) => {
       const card = document.createElement('div');
-      card.className = 'bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-2 hover:border-blue-400 transition flex flex-col justify-between';
+      card.className = 'glass-card glow-border rounded-2xl p-5 shadow-sm space-y-3 flex flex-col justify-between';
 
       let categoryColor = 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       if (kp.category && kp.category.toLowerCase().includes('pitfall')) {
@@ -996,32 +1012,43 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       card.innerHTML = `
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md border ${categoryColor}">
-              ${kp.category || 'High-Yield Concept'}
+            <span class="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border ${categoryColor}">
+              ${kp.category || 'Core Concept'}
             </span>
-            <label class="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer">
-              <input type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" id="kpCheck_${idx}">
+            <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+              <input type="checkbox" class="rounded-md border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" id="kpCheck_${idx}">
               <span>Mastered</span>
             </label>
           </div>
-          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white" id="kpTitle_${idx}">${kp.title}</h4>
+          <h4 class="font-heading font-black text-sm text-slate-900 dark:text-white" id="kpTitle_${idx}">${kp.title}</h4>
           <div class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal" id="kpContent_${idx}">
             ${kp.content}
           </div>
         </div>
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end">
+          <button class="btn-copy-point text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1" data-point-idx="${idx}">
+            <i class="fa-regular fa-copy"></i> Copy Formula/Point
+          </button>
+        </div>
       `;
 
-      // Mastered strikethrough listener
       const checkbox = card.querySelector(`#kpCheck_${idx}`);
       const titleEl = card.querySelector(`#kpTitle_${idx}`);
       checkbox.addEventListener('change', () => {
         if (checkbox.checked) {
           titleEl.classList.add('line-through', 'text-slate-400');
+          showToast(`Mastered "${kp.title.slice(0, 30)}..." 🎯`, "success");
         } else {
           titleEl.classList.remove('line-through', 'text-slate-400');
         }
+      });
+
+      card.querySelector('.btn-copy-point').addEventListener('click', () => {
+        navigator.clipboard.writeText(`${kp.title}\n${kp.content}`).then(() => {
+          showToast("Copied formula to clipboard!", "success");
+        });
       });
 
       keyPointsList.appendChild(card);
@@ -1032,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state.studyKit || !state.studyKit.key_points) return;
     const text = state.studyKit.key_points.map((k, i) => `${i + 1}. [${k.category}] ${k.title}\n   ${k.content}`).join('\n\n');
     navigator.clipboard.writeText(text).then(() => {
-      alert("Key points and formulas copied to clipboard!");
+      showToast("All formulas & key points copied to clipboard!", "success");
     });
   });
 
@@ -1046,37 +1073,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     explanations.forEach((exp, idx) => {
       const card = document.createElement('div');
-      card.className = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4';
+      card.className = 'glass-card rounded-3xl p-6 sm:p-7 shadow-sm space-y-4 glow-border';
 
       card.innerHTML = `
         <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-bold text-sm">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-heading font-black text-sm shadow-sm">
             ${idx + 1}
           </div>
-          <h4 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">${exp.topic}</h4>
+          <h4 class="font-heading font-black text-base text-slate-900 dark:text-white">${exp.topic}</h4>
         </div>
 
-        <!-- Real-world Analogy Box -->
-        <div class="p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs sm:text-sm text-amber-950 dark:text-amber-200 flex items-start gap-3">
+        <div class="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs sm:text-sm text-amber-950 dark:text-amber-200 flex items-start gap-3 shadow-sm">
           <i class="fa-solid fa-lightbulb text-amber-500 text-base mt-0.5 shrink-0"></i>
           <div>
-            <span class="font-bold block mb-0.5">Intuitive Real-World Analogy:</span>
-            <p class="leading-relaxed">${exp.analogy || 'Conceptual model'}</p>
+            <span class="font-bold block mb-1">Intuitive Mental Model / Analogy:</span>
+            <p class="leading-relaxed font-normal">${exp.analogy || 'Conceptual model'}</p>
           </div>
         </div>
 
-        <!-- Technical Deep Dive -->
-        <div class="space-y-1 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
-          <span class="font-bold text-slate-900 dark:text-white block">Technical & Mathematical Breakdown:</span>
+        <div class="space-y-1.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          <span class="font-bold text-slate-900 dark:text-white block">Technical Breakdown & Equations:</span>
           <div class="prose-nptel">${marked.parse(exp.deep_dive || '')}</div>
         </div>
 
-        <!-- Professor's Exam Warning -->
-        <div class="p-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs text-blue-950 dark:text-blue-200 flex items-center gap-2.5">
-          <i class="fa-solid fa-triangle-exclamation text-blue-600 dark:text-blue-400 shrink-0"></i>
+        <div class="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-xs text-blue-950 dark:text-blue-200 flex items-center gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-blue-600 dark:text-blue-400 text-base shrink-0"></i>
           <div>
-            <span class="font-bold">NPTEL Professor's Exam Trap: </span>
-            <span>${exp.key_takeaway || 'Pay attention to units and indices.'}</span>
+            <span class="font-bold">NPTEL Professor's Exam Warning: </span>
+            <span class="font-normal">${exp.key_takeaway || 'Pay attention to units and indices.'}</span>
           </div>
         </div>
       `;
@@ -1139,9 +1163,9 @@ document.addEventListener('DOMContentLoaded', () => {
     state.flashcards.cards.sort(() => Math.random() - 0.5);
     state.flashcards.currentIndex = 0;
     renderCurrentFlashcard();
+    showToast("Flashcards shuffled!", "info");
   });
 
-  // Space bar flip
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
       const flashcardTabActive = !document.getElementById('tabContent_flashcards').classList.contains('hidden');
@@ -1157,7 +1181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     suggestedDoubtsList.innerHTML = '';
     sampleDoubts.forEach(doubtText => {
       const chip = document.createElement('button');
-      chip.className = 'px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-medium border border-slate-200 dark:border-slate-700 transition text-left flex items-center gap-1.5';
+      chip.className = 'px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition text-left flex items-center gap-2 shadow-sm active:scale-95';
       chip.innerHTML = `<i class="fa-regular fa-comment-dots text-blue-500"></i> <span>${doubtText}</span>`;
       chip.addEventListener('click', () => {
         chatInput.value = doubtText;
@@ -1175,7 +1199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.value = '';
     appendChatMessage('user', doubt);
 
-    // Show typing loader
     const loadingId = 'aiTyping_' + Date.now();
     appendLoadingMessage(loadingId);
 
@@ -1210,16 +1233,16 @@ document.addEventListener('DOMContentLoaded', () => {
     msgDiv.className = `flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`;
 
     const icon = isUser 
-      ? '<div class="w-7 h-7 rounded-full bg-slate-700 text-white shrink-0 flex items-center justify-center text-xs"><i class="fa-solid fa-user"></i></div>'
-      : '<div class="w-7 h-7 rounded-full bg-blue-600 text-white shrink-0 flex items-center justify-center text-xs"><i class="fa-solid fa-robot"></i></div>';
+      ? '<div class="w-8 h-8 rounded-xl bg-slate-700 text-white shrink-0 flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-user"></i></div>'
+      : '<div class="w-8 h-8 rounded-xl bg-blue-600 text-white shrink-0 flex items-center justify-center text-xs shadow-sm"><i class="fa-solid fa-robot"></i></div>';
 
     const bubbleColor = isUser
-      ? 'bg-blue-600 text-white rounded-tr-none'
-      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-tl-none';
+      ? 'bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-500/25'
+      : 'glass-card text-slate-800 dark:text-slate-200 rounded-tl-none';
 
     msgDiv.innerHTML = `
       ${icon}
-      <div class="${bubbleColor} p-3.5 rounded-2xl text-xs sm:text-sm max-w-2xl leading-relaxed shadow-sm">
+      <div class="${bubbleColor} p-4 rounded-2xl text-xs sm:text-sm max-w-2xl leading-relaxed shadow-sm">
         ${isUser ? text : marked.parse(text)}
       </div>
     `;
@@ -1234,12 +1257,12 @@ document.addEventListener('DOMContentLoaded', () => {
     msgDiv.id = id;
     msgDiv.className = 'flex gap-3';
     msgDiv.innerHTML = `
-      <div class="w-7 h-7 rounded-full bg-blue-600 text-white shrink-0 flex items-center justify-center text-xs">
+      <div class="w-8 h-8 rounded-xl bg-blue-600 text-white shrink-0 flex items-center justify-center text-xs shadow-sm">
         <i class="fa-solid fa-robot"></i>
       </div>
-      <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-none text-xs text-slate-500 flex items-center gap-2">
+      <div class="glass-card p-4 rounded-2xl rounded-tl-none text-xs text-slate-500 flex items-center gap-2">
         <i class="fa-solid fa-circle-notch fa-spin text-blue-600"></i>
-        <span>Formulating professor explanation...</span>
+        <span>Formulating TA explanation...</span>
       </div>
     `;
     chatMessages.appendChild(msgDiv);
@@ -1253,7 +1276,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnClearChat.addEventListener('click', () => {
     chatMessages.innerHTML = '';
-    appendChatMessage('ai', 'Chat history cleared. What topic or doubt can I help you resolve?');
+    appendChatMessage('ai', 'Chat history cleared. What topic or derivation can I help you with?');
+    showToast("Chat cleared.", "info");
   });
 
   // ================= TAB 6: EXPORT & DOWNLOAD =================
@@ -1275,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       md += `### ${i + 1}. ${exp.topic}\n`;
       md += `> **Analogy:** ${exp.analogy}\n\n`;
       md += `${exp.deep_dive}\n\n`;
-      md += `**Exam Takeaway:** ${exp.key_takeaway}\n\n`;
+      md += `**Exam Warning:** ${exp.key_takeaway}\n\n`;
     });
 
     md += `## NPTEL Practice Question Bank\n`;
@@ -1291,12 +1315,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     downloadFile(md, `${(kit.title || 'nptel_study_kit').replace(/\s+/g, '_')}.md`, 'text/markdown');
+    showToast("Markdown notes downloaded!", "success");
   });
 
   btnExportJson.addEventListener('click', () => {
     if (!state.studyKit) return;
     const jsonStr = JSON.stringify(state.studyKit, null, 2);
     downloadFile(jsonStr, `${(state.studyKit.title || 'nptel_study_kit').replace(/\s+/g, '_')}.json`, 'application/json');
+    showToast("JSON question bank downloaded!", "success");
   });
 
   function downloadFile(content, filename, type) {

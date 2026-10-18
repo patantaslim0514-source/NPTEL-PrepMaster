@@ -13,15 +13,18 @@
       theme: {
         extend: {
           colors: {
-            nptel: {
-              50: '#f0f7ff',
-              100: '#e0effe',
-              200: '#bae0fd',
-              500: '#2563eb',
-              600: '#1d4ed8',
-              700: '#1e40af',
-              800: '#1e3a8a',
-              900: '#0f2942',
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+              950: '#0f172a',
             }
           }
         }
@@ -29,10 +32,10 @@
     }
   </script>
   
-  <!-- FontAwesome Icons -->
+  <!-- FontAwesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- KaTeX for Math Equations -->
+  <!-- KaTeX for Math & Formula Typesetting -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -40,313 +43,408 @@
   <!-- Marked.js for Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   
-  <!-- Canvas Confetti for Exam Success -->
+  <!-- Canvas Confetti for Exam Success Celebration -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
-  <!-- Custom CSS -->
+  <!-- Custom Modern CSS Engine -->
   <link rel="stylesheet" href="/static/css/custom.css">
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased transition-colors duration-200">
+<body class="bg-mesh-pattern bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased transition-colors duration-300 relative selection:bg-blue-500 selection:text-white">
 
-  <!-- ================= TOP NAVIGATION ================= -->
-  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+  <!-- ================= AMBIENT BACKGROUND GLOW ORBS ================= -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div class="absolute -top-32 -left-32 w-[30rem] h-[30rem] bg-blue-500/15 dark:bg-blue-600/15 rounded-full blur-3xl orb-1"></div>
+    <div class="absolute top-1/3 -right-40 w-[32rem] h-[32rem] bg-indigo-500/15 dark:bg-purple-600/15 rounded-full blur-3xl orb-2"></div>
+    <div class="absolute -bottom-40 left-1/3 w-[36rem] h-[36rem] bg-cyan-500/10 dark:bg-cyan-600/10 rounded-full blur-3xl orb-1"></div>
+  </div>
+
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toastContainer" class="fixed top-20 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="sticky top-0 z-40 glass-nav shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
-      <!-- Logo & Brand -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform duration-200">
           <i class="fa-solid fa-graduation-cap text-lg"></i>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-500 bg-clip-text text-transparent">NPTEL PrepMaster</span>
-            <span class="px-2 py-0.5 text-[10px] font-semibold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-800">AI Powered</span>
+            <span class="font-heading font-black text-xl tracking-tight gradient-text-primary">NPTEL PrepMaster</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-800/80">AI 2026</span>
           </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">IIT & IISc Exam Preparation Companion</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">IIT & IISc Proctored Exam Companion</p>
         </div>
-      </div>
+      </a>
 
-      <!-- Quick Actions -->
+      <!-- Right Navigation Actions -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Sample Courses Button -->
-        <button id="btnQuickSample" class="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
-          <i class="fa-solid fa-sparkles text-amber-500"></i>
-          <span>Sample Courses</span>
+        <!-- Quick Sample Button -->
+        <button id="btnQuickSample" class="px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 shadow-sm active:scale-95">
+          <i class="fa-solid fa-bolt text-amber-500"></i>
+          <span>Sample Course</span>
         </button>
 
         <!-- API Key Settings Button -->
-        <button id="btnOpenApiKeyModal" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition flex items-center gap-1.5 border border-blue-200 dark:border-blue-800">
+        <button id="btnOpenApiKeyModal" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition flex items-center gap-1.5 border border-blue-200/80 dark:border-blue-800/80 shadow-sm active:scale-95">
           <i class="fa-solid fa-key text-blue-600 dark:text-blue-400"></i>
-          <span id="apiKeyStatusText">Gemini API Key</span>
+          <span id="apiKeyStatusText">Gemini Key</span>
         </button>
 
-        <!-- Dark Mode Toggle -->
-        <button id="btnThemeToggle" aria-label="Toggle Theme" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition">
-          <i class="fa-solid fa-moon dark:hidden"></i>
-          <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+        <!-- Dark/Light Theme Toggle -->
+        <button id="btnThemeToggle" aria-label="Toggle Theme" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition shadow-sm active:scale-90">
+          <i class="fa-solid fa-moon dark:hidden text-slate-700"></i>
+          <i class="fa-solid fa-sun hidden dark:block text-amber-400 text-sm"></i>
         </button>
       </div>
 
     </div>
   </header>
 
-  <!-- ================= MAIN CONTENT ================= -->
+  <!-- ================= MAIN CONTAINER ================= -->
   <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    <!-- HERO BANNER -->
-    <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 shadow-xl">
-      <div class="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
-      <div class="absolute right-1/3 -top-10 w-60 h-60 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none"></div>
+    <!-- ================= HERO SHOWCASE BANNER ================= -->
+    <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white p-6 sm:p-10 shadow-2xl border border-blue-900/50">
       
-      <div class="relative z-10 max-w-3xl space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium text-blue-200 border border-white/10">
-          <i class="fa-solid fa-award text-amber-400"></i>
-          <span>Tailored for NPTEL / SWAYAM Elite Certification Standards</span>
+      <!-- Ambient Decorative Rings -->
+      <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-10 -bottom-10 w-60 h-60 rounded-full bg-cyan-500/10 blur-2xl pointer-events-none"></div>
+
+      <div class="relative z-10 max-w-3xl space-y-4">
+        
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-blue-200 border border-white/15">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>NPTEL Elite & Gold Certification Prep System</span>
         </div>
-        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-          Turn Any NPTEL PDF into an <span class="text-blue-300 underline decoration-blue-400/40 decoration-wavy underline-offset-4">Exam Ready</span> Study Kit
+
+        <h1 class="text-3xl sm:text-5xl font-heading font-black tracking-tight leading-tight">
+          Transform Any NPTEL PDF into an <span class="gradient-text-primary underline decoration-cyan-400/30 decoration-wavy underline-offset-8">Exam-Ready</span> Study Kit
         </h1>
-        <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
-          Upload your weekly lecture slides, assignment PDFs, or course transcripts. Instantly receive high-yield key formulas, conceptual breakdowns with real-world analogies, and authentic NPTEL-style practice quizzes with timer and TCS iON exam simulation.
+
+        <p class="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl font-normal">
+          Upload your weekly lecture slides, assignment sheets, or notes. Instantly get 
+          <strong>high-yield key formulas</strong>, <strong>deep conceptual breakdowns with analogies</strong>, 
+          and an <strong>authentic TCS iON exam simulator</strong> with live timer and palette navigation.
         </p>
+
+        <!-- Feature Pills -->
+        <div class="flex flex-wrap gap-2.5 pt-2">
+          <div class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-square-root-variable text-cyan-400"></i> KaTeX Math Formulas
+          </div>
+          <div class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-desktop text-blue-400"></i> TCS iON Test Simulator
+          </div>
+          <div class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i> Intuitive Analogies
+          </div>
+          <div class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-200 flex items-center gap-1.5">
+            <i class="fa-solid fa-clone text-purple-400"></i> 3D Quick Flashcards
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- OFFLINE / LIVE BANNER NOTIFICATION (DYNAMIC) -->
-    <div id="noticeBanner" class="hidden p-4 rounded-xl border transition-all duration-300">
-      <!-- Dynamic notification injected here -->
-    </div>
+    <!-- DYNAMIC STATUS NOTIFICATION BANNER -->
+    <div id="noticeBanner" class="hidden rounded-2xl p-4 shadow-sm transition-all duration-300"></div>
 
-    <!-- ================= UPLOAD & CONFIGURATION SECTION ================= -->
-    <section id="uploadSection" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- ================= UPLOAD & CUSTOMIZATION WORKBENCH ================= -->
+    <section id="uploadSection" class="glass-card rounded-3xl p-6 sm:p-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- Left Column: Dropzone (7 cols) -->
-        <div class="lg:col-span-7 flex flex-col justify-between">
+        <!-- Left: Upload Area (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
           <div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-file-pdf text-rose-500"></i>
-              <span>Upload Lecture PDF</span>
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Supports any NPTEL slide deck, textbook chapter, or assignment PDF (up to 25MB)
-            </p>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h2 class="font-heading font-extrabold text-xl text-slate-900 dark:text-white flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/80 text-rose-600 flex items-center justify-center text-sm shadow-sm">
+                    <i class="fa-solid fa-file-pdf"></i>
+                  </span>
+                  <span>Upload NPTEL Lecture PDF</span>
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Drag & drop slide decks, assignment questions, or textbook chapters (up to 25MB)
+                </p>
+              </div>
+            </div>
 
-            <!-- Drag & Drop Zone -->
-            <div id="dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl p-6 sm:p-8 text-center transition cursor-pointer bg-slate-50/60 dark:bg-slate-800/40 relative group">
+            <!-- Modern Dropzone Container -->
+            <div id="dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700/80 hover:border-blue-500 dark:hover:border-blue-400 rounded-2xl p-6 sm:p-8 text-center transition-all duration-300 cursor-pointer bg-slate-50/70 dark:bg-slate-900/40 relative group shadow-sm hover:shadow-md">
               <input type="file" id="pdfFileInput" accept=".pdf" class="hidden">
               
+              <!-- Default State -->
               <div id="dropzoneContentDefault" class="space-y-3">
-                <div class="w-14 h-14 mx-auto rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl group-hover:scale-110 transition duration-200">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-500/25 group-hover:scale-110 transition duration-300">
                   <i class="fa-solid fa-cloud-arrow-up"></i>
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    Drag and drop your PDF here, or <span class="text-blue-600 dark:text-blue-400 underline">browse</span>
+                  <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    Drop your PDF here, or <span class="text-blue-600 dark:text-blue-400 underline underline-offset-2">browse computer</span>
                   </p>
                   <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    NPTEL weekly slides, notes, or assignment problem sheets
+                    Extracts formulas, diagrams, definitions, and generates MCQs automatically
                   </p>
                 </div>
               </div>
 
-              <!-- Dropzone File Selected State -->
-              <div id="dropzoneContentSelected" class="hidden space-y-3">
-                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
-                  <i class="fa-solid fa-check"></i>
+              <!-- Selected File State -->
+              <div id="dropzoneContentSelected" class="hidden space-y-4">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shadow-md shadow-emerald-500/20">
+                  <i class="fa-solid fa-file-circle-check"></i>
                 </div>
                 <div>
-                  <p id="selectedFileName" class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate max-w-sm mx-auto">file.pdf</p>
-                  <div class="flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    <span id="selectedFileSize">0 KB</span>
-                    <span>•</span>
-                    <span id="selectedPageCount">0 Pages</span>
-                    <span>•</span>
-                    <span id="selectedWordCount">0 Words</span>
+                  <p id="selectedFileName" class="text-sm font-bold text-slate-900 dark:text-white truncate max-w-sm mx-auto">lecture.pdf</p>
+                  
+                  <div class="flex items-center justify-center gap-2 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    <span id="selectedFileSize" class="px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-800 font-mono text-[11px]">0 KB</span>
+                    <span id="selectedPageCount" class="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold text-[11px]">0 Pages</span>
+                    <span id="selectedWordCount" class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px]">0 Words</span>
                   </div>
                 </div>
-                <button type="button" id="btnChangeFile" class="text-xs font-semibold text-rose-500 hover:underline">
-                  Change File
-                </button>
+
+                <div>
+                  <button type="button" id="btnChangeFile" class="text-xs font-bold text-rose-500 hover:text-rose-600 hover:underline">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Choose Another File
+                  </button>
+                </div>
               </div>
+
             </div>
           </div>
 
-          <!-- Preloaded Sample Course Chips -->
-          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-              <i class="fa-solid fa-lightbulb text-amber-500"></i>
-              <span>Don't have a PDF right now? Try these preloaded NPTEL courses:</span>
-            </p>
-            <div class="flex flex-wrap gap-2">
-              <button data-course="cloud_computing" class="btn-sample-chip px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-300 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1">
-                <i class="fa-solid fa-cloud text-blue-500"></i> Cloud Computing (W3)
+          <!-- Preloaded Course Cards -->
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-sparkles text-amber-500"></i> Or select a preloaded NPTEL course:
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              
+              <!-- Course 1 -->
+              <button data-course="cloud_computing" class="btn-sample-chip text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-850/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md transition-all group">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-cloud"></i>
+                  </span>
+                  <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">IIT Kharagpur</span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 truncate">Cloud Computing</h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Virtualization & SLAs</p>
               </button>
-              <button data-course="dsa_algorithms" class="btn-sample-chip px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1">
-                <i class="fa-solid fa-diagram-project text-emerald-500"></i> DSA & Graphs (W4)
+
+              <!-- Course 2 -->
+              <button data-course="dsa_algorithms" class="btn-sample-chip text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-850/60 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-md transition-all group">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-diagram-project"></i>
+                  </span>
+                  <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">CMI / NPTEL</span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 truncate">DSA & Algorithms</h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Dijkstra, MST & Bellman</p>
               </button>
-              <button data-course="deep_learning" class="btn-sample-chip px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1">
-                <i class="fa-solid fa-brain text-purple-500"></i> Deep Learning & CNN (W6)
+
+              <!-- Course 3 -->
+              <button data-course="deep_learning" class="btn-sample-chip text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-850/60 hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-md transition-all group">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-brain"></i>
+                  </span>
+                  <span class="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase">IIT Madras</span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-600 truncate">Deep Learning</h4>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">CNNs & Backprop</p>
               </button>
-              <button id="btnLoadLocalSamplePdf" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 transition flex items-center gap-1">
-                <i class="fa-solid fa-file-arrow-up text-amber-600"></i> Load Generated PDF
+
+            </div>
+
+            <!-- Built-in PDF trigger -->
+            <div class="mt-2.5 flex items-center justify-between text-xs text-slate-500">
+              <span>Have a local file in the folder?</span>
+              <button id="btnLoadLocalSamplePdf" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1">
+                <i class="fa-solid fa-file-arrow-up"></i> Load `sample_nptel_lecture.pdf`
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Exam Customization Options (5 cols) -->
-        <div class="lg:col-span-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700/60 flex flex-col justify-between">
-          <div class="space-y-4">
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
-              <span>Exam Prep Customization</span>
-            </h3>
+        <!-- Right: Exam Prep Customization Panel (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between space-y-5 shadow-inner">
+          
+          <div class="space-y-5">
+            <div class="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
+              <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-blue-600 dark:text-blue-400"></i>
+                <span>Exam Configuration</span>
+              </h3>
+              <span class="text-[11px] font-semibold text-slate-400 uppercase">Customizer</span>
+            </div>
 
-            <!-- MCQ Count -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Number of Exam MCQs:
+            <!-- MCQ Count Picker -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>Number of MCQs:</span>
+                <span class="text-[11px] text-blue-600 dark:text-blue-400 font-mono" id="mcqCountSummaryLabel">10 Questions</span>
               </label>
               <div class="grid grid-cols-4 gap-2">
-                <button type="button" data-mcq-count="5" class="mcq-count-btn py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition">5</button>
-                <button type="button" data-mcq-count="10" class="mcq-count-btn py-1.5 text-xs font-semibold rounded-lg border border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 transition">10</button>
-                <button type="button" data-mcq-count="15" class="mcq-count-btn py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition">15</button>
-                <button type="button" data-mcq-count="20" class="mcq-count-btn py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition">20</button>
+                <button type="button" data-mcq-count="5" class="mcq-count-btn py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition shadow-sm active:scale-95">5</button>
+                <button type="button" data-mcq-count="10" class="mcq-count-btn py-2 text-xs font-bold rounded-xl border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-300 transition shadow-sm active:scale-95">10</button>
+                <button type="button" data-mcq-count="15" class="mcq-count-btn py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition shadow-sm active:scale-95">15</button>
+                <button type="button" data-mcq-count="20" class="mcq-count-btn py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition shadow-sm active:scale-95">20</button>
               </div>
             </div>
 
             <!-- Difficulty Level -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Target Difficulty:
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Difficulty Level:
               </label>
-              <select id="selectDifficulty" class="w-full text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="All Levels">All Levels (Authentic NPTEL Mix: Easy + Medium + Hard)</option>
-                <option value="Easy">Easy (Conceptual & Definition Recall)</option>
+              <select id="selectDifficulty" class="w-full text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer">
+                <option value="All Levels">All Levels (Authentic NPTEL Exam Mix: Easy + Medium + Hard)</option>
+                <option value="Easy">Easy (Definitions & Concept Recall)</option>
                 <option value="Medium">Medium (Application & Invariant Verification)</option>
                 <option value="Hard">Hard (Calculations, Derivations & Edge Cases)</option>
               </select>
             </div>
 
-            <!-- Study Focus -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                Preparation Focus:
+            <!-- Focus Mode -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Revision Strategy:
               </label>
-              <select id="selectFocusMode" class="w-full text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="Comprehensive">Comprehensive (Exam + Assignments + Formulas)</option>
-                <option value="Assignment Focus">Weekly Assignment Focus (High-Yield Questions)</option>
-                <option value="Formulas & Numerical">Formulas & Numerical Problems Focus</option>
+              <select id="selectFocusMode" class="w-full text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer">
+                <option value="Comprehensive">Comprehensive (Full Coverage + Formulas + MCQs)</option>
+                <option value="Assignment Focus">Weekly Assignment Focus (Assignment Problem Style)</option>
+                <option value="Formulas & Numerical">Formulas & Numerical Calculations</option>
                 <option value="Rapid Revision">Rapid 1-Night Revision (Bullet Points & Traps)</option>
               </select>
             </div>
           </div>
 
-          <!-- Generate Action Button -->
-          <div class="mt-6">
-            <button id="btnGenerateKit" class="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/25 transition transform active:scale-98 flex items-center justify-center gap-2">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <!-- Generation CTA Button -->
+          <div class="pt-4">
+            <button id="btnGenerateKit" class="w-full py-3.5 px-4 rounded-2xl font-heading font-black text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 transition-all duration-200 transform active:scale-98 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
               <span>Generate NPTEL Study Kit</span>
             </button>
+            <p class="text-[11px] text-center text-slate-400 mt-2">
+              Works 100% offline or with your free Gemini API key
+            </p>
           </div>
+
         </div>
 
       </div>
 
-      <!-- Progress Stepper (Visible during generation) -->
-      <div id="generationProgressContainer" class="hidden mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+      <!-- Animated Progress Stepper -->
+      <div id="generationProgressContainer" class="hidden mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
         <div class="space-y-3">
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <span id="progressStepTitle" class="flex items-center gap-2">
-              <i class="fa-solid fa-circle-notch fa-spin text-blue-600"></i>
-              <span>Extracting PDF text and recognizing lecture topics...</span>
+          <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+            <span id="progressStepTitle" class="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <i class="fa-solid fa-circle-notch fa-spin"></i>
+              <span>Extracting PDF text and analyzing lecture topics...</span>
             </span>
-            <span id="progressPercent">25%</span>
+            <span id="progressPercent" class="font-mono text-sm font-extrabold text-blue-600 dark:text-blue-400">25%</span>
           </div>
-          <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300 w-1/4"></div>
+
+          <!-- Progress Bar with Glow -->
+          <div class="w-full h-2.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden relative">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 rounded-full transition-all duration-300 w-1/4 shadow-sm shadow-blue-500"></div>
           </div>
+
           <p id="progressDetail" class="text-[11px] text-slate-500 dark:text-slate-400 italic">
             Reading pages, tables, and structural markers...
           </p>
         </div>
       </div>
+
     </section>
 
     <!-- ================= DASHBOARD & STUDY KIT (TABS) ================= -->
     <section id="studyKitSection" class="hidden space-y-6">
 
       <!-- Course Header Summary Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="space-y-1">
+      <div class="glass-card rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          
+          <div class="space-y-2">
             <div class="flex items-center gap-2 flex-wrap">
-              <span id="badgeWeekTopic" class="px-2.5 py-0.5 text-xs font-semibold rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+              <span id="badgeWeekTopic" class="px-3 py-1 text-xs font-bold rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
                 NPTEL Module
               </span>
-              <span id="badgeAiMode" class="px-2.5 py-0.5 text-xs font-semibold rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+              <span id="badgeAiMode" class="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
                 AI Mode: Live
               </span>
             </div>
-            <h2 id="studyKitTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+            
+            <h2 id="studyKitTitle" class="font-heading font-black text-2xl sm:text-3xl text-slate-900 dark:text-white">
               Course Title
             </h2>
-            <p id="studyKitOverview" class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-3xl leading-relaxed">
+            
+            <p id="studyKitOverview" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">
               Overview description here...
             </p>
           </div>
 
-          <!-- Quick Stats Pill Box -->
+          <!-- Metrics Box -->
           <div class="flex items-center gap-3 shrink-0">
-            <div class="bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-              <span id="statMcqCount" class="block text-lg font-bold text-blue-600 dark:text-blue-400">10</span>
-              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">MCQs</span>
+            <div class="glass-card px-4 py-3 rounded-2xl text-center min-w-[70px]">
+              <span id="statMcqCount" class="block font-heading font-black text-xl text-blue-600 dark:text-blue-400">10</span>
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">MCQs</span>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-              <span id="statFlashcardCount" class="block text-lg font-bold text-indigo-600 dark:text-indigo-400">5</span>
-              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Flashcards</span>
+            <div class="glass-card px-4 py-3 rounded-2xl text-center min-w-[70px]">
+              <span id="statFlashcardCount" class="block font-heading font-black text-xl text-indigo-600 dark:text-indigo-400">5</span>
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Flashcards</span>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
-              <span id="statReadTime" class="block text-lg font-bold text-amber-600 dark:text-amber-400">15m</span>
-              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Rev. Time</span>
+            <div class="glass-card px-4 py-3 rounded-2xl text-center min-w-[70px]">
+              <span id="statReadTime" class="block font-heading font-black text-xl text-amber-500">15m</span>
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Study Time</span>
             </div>
           </div>
+
         </div>
       </div>
 
-      <!-- NAVIGATION TABS -->
-      <div class="border-b border-slate-200 dark:border-slate-800 overflow-x-auto">
+      <!-- Navigation Tabs Bar -->
+      <div class="border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
         <nav class="flex space-x-2 sm:space-x-4 min-w-max" aria-label="Tabs">
           
-          <button data-tab="quiz" class="tab-btn active px-4 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 flex items-center gap-2">
-            <i class="fa-solid fa-list-check"></i>
+          <button data-tab="quiz" class="tab-btn active px-4 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-list-check text-blue-500"></i>
             <span>NPTEL Exam Simulator</span>
-            <span id="tabBadgeMcq" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-950">10</span>
+            <span id="tabBadgeMcq" class="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 font-mono font-bold">10</span>
           </button>
 
-          <button data-tab="keypoints" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2">
+          <button data-tab="keypoints" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
             <i class="fa-solid fa-star text-amber-500"></i>
             <span>Key Points & Formulas</span>
           </button>
 
-          <button data-tab="explanations" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2">
+          <button data-tab="explanations" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
             <i class="fa-solid fa-book-open-reader text-indigo-500"></i>
             <span>Deep Explanations</span>
           </button>
 
-          <button data-tab="flashcards" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2">
+          <button data-tab="flashcards" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
             <i class="fa-solid fa-layer-group text-emerald-500"></i>
-            <span>Flashcards</span>
+            <span>3D Flashcards</span>
           </button>
 
-          <button data-tab="doubts" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2">
+          <button data-tab="doubts" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
             <i class="fa-solid fa-comments text-rose-500"></i>
             <span>Ask AI Doubts</span>
           </button>
 
-          <button data-tab="export" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2">
+          <button data-tab="export" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
             <i class="fa-solid fa-download text-teal-500"></i>
             <span>Export & Print</span>
           </button>
@@ -354,93 +452,101 @@
         </nav>
       </div>
 
-      <!-- ================= TAB CONTENT 1: NPTEL EXAM SIMULATOR ================= -->
-      <div id="tabContent_quiz" class="tab-content space-y-4">
+      <!-- ================= TAB CONTENT 1: NPTEL / TCS iON EXAM SIMULATOR ================= -->
+      <div id="tabContent_quiz" class="tab-content space-y-5">
         
-        <!-- Simulation Control Bar -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3">
+        <!-- Exam Control Bar -->
+        <div class="glass-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+          
           <div class="flex items-center gap-3">
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-desktop text-blue-600"></i>
-              <span>TCS iON Examination Interface</span>
-            </span>
-            <span class="text-xs text-slate-400">|</span>
-            <span id="quizModeBadge" class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200">
-              Exam Mode Active
-            </span>
+            <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-sm font-bold">
+              <i class="fa-solid fa-desktop"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider block">
+                TCS iON Examination Environment
+              </span>
+              <span id="quizModeBadge" class="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                Timed Proctored Exam Active
+              </span>
+            </div>
           </div>
 
-          <!-- Timer & Actions -->
+          <!-- Live Timer & Submit -->
           <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-              <i class="fa-regular fa-clock text-rose-500 timer-pulse"></i>
-              <span class="text-xs text-slate-500 font-medium">Time Remaining:</span>
-              <span id="quizTimerDisplay" class="font-mono font-bold text-sm text-slate-900 dark:text-white">15:00</span>
+            <div class="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <i class="fa-regular fa-clock text-rose-500 timer-pulse text-base"></i>
+              <span class="text-xs text-slate-500 font-medium hidden sm:inline">Time Left:</span>
+              <span id="quizTimerDisplay" class="font-mono font-black text-base text-slate-900 dark:text-white tracking-wider">15:00</span>
             </div>
 
-            <button id="btnSubmitExam" class="px-4 py-1.5 text-xs font-bold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition">
-              Submit Test
+            <button id="btnSubmitExam" class="px-5 py-2.5 text-xs font-bold rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition active:scale-95 flex items-center gap-1.5">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit Test</span>
             </button>
           </div>
+
         </div>
 
-        <!-- Exam Workspace (Question & Palette) -->
+        <!-- Exam Workspace (Question & TCS iON Palette) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <!-- Left: Question Panel (8 cols) -->
-          <div class="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between shadow-sm min-h-[480px]">
+          <!-- Left: Question Workspace (8 cols) -->
+          <div class="lg:col-span-8 glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between min-h-[500px]">
             
-            <div class="space-y-4">
-              <!-- Question Header -->
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div class="flex items-center gap-2">
-                  <span id="qNumberDisplay" class="text-base font-extrabold text-blue-600 dark:text-blue-400">Question 1</span>
-                  <span id="qTypeBadge" class="px-2 py-0.5 text-[11px] font-semibold rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    Single Choice
+            <div class="space-y-5">
+              
+              <!-- Question Header Meta -->
+              <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <span id="qNumberDisplay" class="font-heading font-black text-lg text-blue-600 dark:text-blue-400">Question 1</span>
+                  <span id="qTypeBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    Single Choice (MCQ)
                   </span>
-                  <span id="qDiffBadge" class="px-2 py-0.5 text-[11px] font-semibold rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200">
+                  <span id="qDiffBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-900">
                     Medium
                   </span>
                 </div>
-                <div class="text-xs font-semibold text-slate-500">
+                <div class="text-xs font-bold font-mono text-slate-500 dark:text-slate-400">
                   <span id="qMarksDisplay">+1.0 / -0.0 Marks</span>
                 </div>
               </div>
 
               <!-- Question Text -->
-              <div id="qTextDisplay" class="text-sm sm:text-base font-medium text-slate-800 dark:text-slate-200 leading-relaxed py-2">
+              <div id="qTextDisplay" class="text-base sm:text-lg font-medium text-slate-900 dark:text-slate-100 leading-relaxed py-2">
                 Loading question...
               </div>
 
               <!-- Options Container -->
-              <div id="qOptionsContainer" class="space-y-2.5 pt-2">
+              <div id="qOptionsContainer" class="space-y-3 pt-2">
                 <!-- Dynamically injected options -->
               </div>
 
-              <!-- Hint Accordion (Optional review mode) -->
-              <div id="qHintContainer" class="hidden mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200">
-                <span class="font-bold"><i class="fa-regular fa-lightbulb mr-1"></i> Hint:</span>
-                <span id="qHintText"></span>
+              <!-- Hint Accordion -->
+              <div id="qHintContainer" class="hidden mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200">
+                <span class="font-bold flex items-center gap-1.5 mb-1"><i class="fa-solid fa-lightbulb text-amber-500"></i> Exam Clue / Hint:</span>
+                <span id="qHintText" class="leading-relaxed"></span>
               </div>
+
             </div>
 
-            <!-- Bottom Question Controls -->
-            <div class="border-t border-slate-100 dark:border-slate-800 pt-4 mt-6 flex flex-wrap items-center justify-between gap-3">
+            <!-- Question Bottom Actions -->
+            <div class="border-t border-slate-200/80 dark:border-slate-800 pt-5 mt-6 flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
-                <button id="btnMarkForReview" class="px-3 py-2 text-xs font-semibold rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 transition">
-                  <i class="fa-regular fa-bookmark mr-1"></i> Mark for Review & Next
+                <button id="btnMarkForReview" class="px-3.5 py-2.5 text-xs font-bold rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 transition shadow-sm active:scale-95">
+                  <i class="fa-solid fa-bookmark mr-1"></i> Mark for Review & Next
                 </button>
-                <button id="btnClearResponse" class="px-3 py-2 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <button id="btnClearResponse" class="px-3.5 py-2.5 text-xs font-semibold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95">
                   Clear Response
                 </button>
               </div>
 
               <div class="flex items-center gap-2">
-                <button id="btnPrevQuestion" class="px-3 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                  <i class="fa-solid fa-arrow-left mr-1"></i> Previous
+                <button id="btnPrevQuestion" class="px-4 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm active:scale-95">
+                  <i class="fa-solid fa-arrow-left mr-1.5"></i> Previous
                 </button>
-                <button id="btnSaveAndNext" class="px-4 py-2 text-xs font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
-                  Save & Next <i class="fa-solid fa-arrow-right ml-1"></i>
+                <button id="btnSaveAndNext" class="px-5 py-2.5 text-xs font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition shadow-md shadow-blue-500/25 active:scale-95">
+                  Save & Next <i class="fa-solid fa-arrow-right ml-1.5"></i>
                 </button>
               </div>
             </div>
@@ -448,44 +554,49 @@
           </div>
 
           <!-- Right: TCS iON Question Palette (4 cols) -->
-          <div class="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center justify-between">
-              <span>Question Palette</span>
-              <span id="paletteTotalSummary" class="text-[11px] font-normal text-slate-500">0 of 10 Answered</span>
-            </h3>
+          <div class="lg:col-span-4 glass-card rounded-3xl p-6 space-y-5">
+            
+            <div class="border-b border-slate-200/80 dark:border-slate-800 pb-3 flex items-center justify-between">
+              <h3 class="font-heading font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+                Question Palette
+              </h3>
+              <span id="paletteTotalSummary" class="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">
+                0 of 10 Answered
+              </span>
+            </div>
 
-            <!-- Palette Status Legend -->
-            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-400">
+            <!-- Legend Grid -->
+            <div class="grid grid-cols-2 gap-2.5 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
               <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold">1</span>
+                <span class="w-4 h-4 rounded bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold shadow-sm">1</span>
                 <span>Answered</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-purple-600 text-white flex items-center justify-center text-[9px] font-bold">1</span>
+                <span class="w-4 h-4 rounded bg-purple-600 text-white flex items-center justify-center text-[9px] font-bold shadow-sm">1</span>
                 <span>Marked for Review</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold">1</span>
+                <span class="w-4 h-4 rounded bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm">1</span>
                 <span>Not Answered</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-[9px] font-bold">1</span>
+                <span class="w-4 h-4 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-[9px] font-bold shadow-sm">1</span>
                 <span>Not Visited</span>
               </div>
             </div>
 
-            <!-- Palette Grid of Buttons -->
-            <div id="paletteButtonsContainer" class="grid grid-cols-5 gap-2 pt-2 max-h-56 overflow-y-auto p-1">
+            <!-- Palette Matrix -->
+            <div id="paletteButtonsContainer" class="grid grid-cols-5 gap-2.5 pt-2 max-h-60 overflow-y-auto p-1">
               <!-- Dynamically populated buttons -->
             </div>
 
-            <!-- Score / Review mode filter -->
-            <div id="quizReviewOptions" class="hidden pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Review Filter:</p>
+            <!-- Review Mode Filter Controls -->
+            <div id="quizReviewOptions" class="hidden pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300 block">Review Filter:</span>
               <div class="flex gap-2">
-                <button id="filterAllQuestions" class="px-2 py-1 text-xs rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-medium">All</button>
-                <button id="filterWrongQuestions" class="px-2 py-1 text-xs rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">Mistakes Only</button>
-                <button id="btnRetakeExam" class="ml-auto px-2 py-1 text-xs rounded bg-slate-200 dark:bg-slate-700 font-semibold hover:bg-slate-300 transition">Retake</button>
+                <button id="filterAllQuestions" class="px-3 py-1.5 text-xs rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold transition">All</button>
+                <button id="filterWrongQuestions" class="px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 transition">Mistakes Only</button>
+                <button id="btnRetakeExam" class="ml-auto px-3 py-1.5 text-xs rounded-xl bg-slate-200 dark:bg-slate-700 font-bold hover:bg-slate-300 transition">Retake</button>
               </div>
             </div>
 
@@ -496,19 +607,23 @@
       </div>
 
       <!-- ================= TAB CONTENT 2: KEY POINTS & FORMULAS ================= -->
-      <div id="tabContent_keypoints" class="tab-content hidden space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+      <div id="tabContent_keypoints" class="tab-content hidden space-y-5">
+        
+        <div class="glass-card p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 class="font-heading font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
               <i class="fa-solid fa-bookmark text-amber-500"></i>
               <span>High-Yield Points & Formulas Cheat Sheet</span>
             </h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Check off points as you master them for the exam</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Formulas are rendered in KaTeX. Check off points as you master them!
+            </p>
           </div>
-          <div class="flex items-center gap-2">
-            <button id="btnCopyKeyPoints" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5">
+
+          <div class="flex items-center gap-3">
+            <button id="btnCopyKeyPoints" class="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm flex items-center gap-2">
               <i class="fa-regular fa-copy"></i>
-              <span>Copy All</span>
+              <span>Copy All Points</span>
             </button>
           </div>
         </div>
@@ -516,100 +631,103 @@
         <div id="keyPointsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Dynamically populated key points -->
         </div>
+
       </div>
 
       <!-- ================= TAB CONTENT 3: DEEP CONCEPT EXPLANATIONS ================= -->
-      <div id="tabContent_explanations" class="tab-content hidden space-y-4">
-        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+      <div id="tabContent_explanations" class="tab-content hidden space-y-5">
+        
+        <div class="glass-card p-5 rounded-2xl">
+          <h3 class="font-heading font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
             <i class="fa-solid fa-lightbulb text-indigo-500"></i>
             <span>Topic-by-Topic Conceptual Breakdown & Intuitive Analogies</span>
           </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            Deep dive explanations designed to bridge theory with practical assignment problems
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Clear mental models, algorithmic traces, and common traps set by NPTEL professors
           </p>
         </div>
 
         <div id="explanationsList" class="space-y-4">
           <!-- Dynamically populated explanations -->
         </div>
+
       </div>
 
-      <!-- ================= TAB CONTENT 4: FLASHCARDS ================= -->
+      <!-- ================= TAB CONTENT 4: 3D FLASHCARDS ================= -->
       <div id="tabContent_flashcards" class="tab-content hidden space-y-6">
         
-        <div class="max-w-xl mx-auto space-y-4">
+        <div class="max-w-xl mx-auto space-y-5">
           
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
-            <span>Card <span id="currentCardIndex">1</span> of <span id="totalCardsCount">5</span></span>
-            <span class="flex items-center gap-1 text-slate-400">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+            <span class="font-mono">Card <span id="currentCardIndex" class="text-blue-600 dark:text-blue-400">1</span> of <span id="totalCardsCount">5</span></span>
+            <span class="flex items-center gap-1.5 text-slate-400">
               <i class="fa-solid fa-keyboard"></i>
-              <span>Click card or press Space to flip</span>
+              <span>Click card or press <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[10px]">Space</kbd> to flip</span>
             </span>
           </div>
 
           <!-- 3D Flashcard Container -->
-          <div id="flashcardScene" class="perspective-1000 w-full h-72 cursor-pointer select-none">
+          <div id="flashcardScene" class="perspective-1000 w-full h-80 cursor-pointer select-none">
             <div id="flashcardInner" class="transform-style-preserve-3d relative w-full h-full duration-500 transition-transform">
               
               <!-- Front Side -->
-              <div class="backface-hidden absolute inset-0 bg-white dark:bg-slate-900 rounded-2xl border-2 border-blue-200 dark:border-blue-900/60 p-8 flex flex-col justify-between shadow-lg">
+              <div class="backface-hidden absolute inset-0 glass-card rounded-3xl border-2 border-blue-200/80 dark:border-blue-900/60 p-8 flex flex-col justify-between shadow-xl">
                 <div class="flex items-center justify-between">
-                  <span id="fcFrontTag" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                  <span id="fcFrontTag" class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                     Concept
                   </span>
-                  <span class="text-xs text-slate-400 flex items-center gap-1">
+                  <span class="text-xs text-slate-400 flex items-center gap-1 font-semibold">
                     <i class="fa-solid fa-arrows-rotate"></i> Flip
                   </span>
                 </div>
 
-                <div class="my-auto text-center">
-                  <p id="fcFrontText" class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-relaxed">
+                <div class="my-auto text-center px-4">
+                  <p id="fcFrontText" class="font-heading font-bold text-xl sm:text-2xl text-slate-900 dark:text-white leading-relaxed">
                     Loading flashcard...
                   </p>
                 </div>
 
                 <div class="text-center text-xs text-slate-400 font-medium">
-                  Click anywhere to reveal answer
+                  Click anywhere to reveal explanation
                 </div>
               </div>
 
               <!-- Back Side -->
-              <div class="backface-hidden rotate-y-180 absolute inset-0 bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-2xl border-2 border-indigo-500/30 p-8 flex flex-col justify-between shadow-xl">
+              <div class="backface-hidden rotate-y-180 absolute inset-0 bg-gradient-to-br from-indigo-950 via-blue-950 to-slate-950 text-white rounded-3xl border-2 border-indigo-500/40 p-8 flex flex-col justify-between shadow-2xl">
                 <div class="flex items-center justify-between">
-                  <span id="fcBackTag" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-white/10 text-blue-200 border border-white/20">
-                    Explanation
+                  <span id="fcBackTag" class="px-3 py-1 text-xs font-bold rounded-full bg-white/10 text-cyan-200 border border-white/20">
+                    High-Yield Definition
                   </span>
-                  <span class="text-xs text-slate-300 flex items-center gap-1">
+                  <span class="text-xs text-slate-300 flex items-center gap-1 font-semibold">
                     <i class="fa-solid fa-arrows-rotate"></i> Flip back
                   </span>
                 </div>
 
-                <div class="my-auto text-center">
+                <div class="my-auto text-center px-4">
                   <p id="fcBackText" class="text-sm sm:text-base font-medium text-slate-100 leading-relaxed">
                     Explanation text...
                   </p>
                 </div>
 
-                <div class="text-center text-xs text-blue-200 font-medium">
-                  NPTEL High-Yield Definition
+                <div class="text-center text-xs text-blue-200 font-bold">
+                  NPTEL Exam Definition
                 </div>
               </div>
 
             </div>
           </div>
 
-          <!-- Flashcard Navigation Controls -->
+          <!-- Flashcard Controls -->
           <div class="flex items-center justify-between pt-2">
-            <button id="btnFcPrev" class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center gap-1.5">
+            <button id="btnFcPrev" class="px-4 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center gap-2 shadow-sm active:scale-95">
               <i class="fa-solid fa-arrow-left"></i> Previous
             </button>
 
-            <button id="btnFcShuffle" class="px-3 py-2 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1">
+            <button id="btnFcShuffle" class="px-3.5 py-2.5 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 active:scale-95">
               <i class="fa-solid fa-shuffle"></i> Shuffle
             </button>
 
-            <button id="btnFcNext" class="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center gap-1.5">
+            <button id="btnFcNext" class="px-4 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center gap-2 shadow-sm active:scale-95">
               Next <i class="fa-solid fa-arrow-right"></i>
             </button>
           </div>
@@ -619,50 +737,50 @@
       </div>
 
       <!-- ================= TAB CONTENT 5: ASK AI DOUBTS ================= -->
-      <div id="tabContent_doubts" class="tab-content hidden space-y-4">
+      <div id="tabContent_doubts" class="tab-content hidden space-y-5">
         
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-          <div class="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
+        <div class="glass-card rounded-3xl p-6 space-y-4">
+          
+          <div class="border-b border-slate-200/80 dark:border-slate-800 pb-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-950/70 text-rose-600 flex items-center justify-center font-bold text-sm">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center font-bold text-base shadow-md shadow-rose-500/20">
                 <i class="fa-solid fa-user-graduate"></i>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">NPTEL Teaching Assistant AI</h3>
-                <p class="text-xs text-slate-500">Ask any doubt grounded directly in your uploaded PDF lecture</p>
+                <h3 class="font-heading font-black text-base text-slate-900 dark:text-white">NPTEL AI Teaching Assistant</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Ask any doubt grounded directly in your uploaded PDF lecture</p>
               </div>
             </div>
-            <button id="btnClearChat" class="text-xs text-slate-400 hover:text-rose-500 transition">
+
+            <button id="btnClearChat" class="text-xs text-slate-400 hover:text-rose-500 transition font-semibold">
               <i class="fa-solid fa-trash-can mr-1"></i> Clear Chat
             </button>
           </div>
 
-          <!-- Suggested Doubts Chips -->
+          <!-- Suggested Doubts -->
           <div id="suggestedDoubtsContainer" class="space-y-1.5">
-            <p class="text-xs font-semibold text-slate-500">Suggested doubts for this lecture:</p>
-            <div id="suggestedDoubtsList" class="flex flex-wrap gap-2">
-              <!-- Dynamically populated suggested doubts -->
-            </div>
+            <p class="text-xs font-bold text-slate-500">Suggested doubts from this lecture:</p>
+            <div id="suggestedDoubtsList" class="flex flex-wrap gap-2"></div>
           </div>
 
-          <!-- Chat Conversation Log -->
-          <div id="chatMessages" class="space-y-3 min-h-[250px] max-h-[420px] overflow-y-auto p-2 border border-slate-100 dark:border-slate-800/60 rounded-xl bg-slate-50/50 dark:bg-slate-950/40">
+          <!-- Message Log -->
+          <div id="chatMessages" class="space-y-3 min-h-[280px] max-h-[440px] overflow-y-auto p-3 border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-slate-50/60 dark:bg-slate-950/60">
             <!-- Initial welcome message -->
             <div class="flex gap-3">
-              <div class="w-7 h-7 rounded-full bg-blue-600 text-white shrink-0 flex items-center justify-center text-xs">
+              <div class="w-8 h-8 rounded-xl bg-blue-600 text-white shrink-0 flex items-center justify-center text-xs shadow-sm">
                 <i class="fa-solid fa-robot"></i>
               </div>
-              <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-700 dark:text-slate-200 shadow-sm max-w-2xl leading-relaxed">
-                Hello! I am your NPTEL Professor Assistant. Feel free to ask any doubt, mathematical derivation, or assignment question related to this lecture!
+              <div class="glass-card p-4 rounded-2xl rounded-tl-none text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed max-w-2xl">
+                Hello! I am your NPTEL TA. Feel free to ask any conceptual doubt, mathematical derivation, or assignment question related to this lecture!
               </div>
             </div>
           </div>
 
-          <!-- Chat Input -->
+          <!-- Chat Form -->
           <form id="chatForm" class="flex gap-2 pt-2">
-            <input type="text" id="chatInput" placeholder="Type your doubt here... (e.g. 'Explain the formula for MTTR' or 'Solve question 3 step by step')" class="flex-1 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" id="btnSendChat" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition shrink-0 flex items-center gap-2">
-              <span>Ask</span>
+            <input type="text" id="chatInput" placeholder="Type your doubt here... (e.g. 'Explain formula for MTTR' or 'Solve question 2 step by step')" class="flex-1 text-xs sm:text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+            <button type="submit" id="btnSendChat" class="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold transition shrink-0 flex items-center gap-2 shadow-md shadow-blue-500/25 active:scale-95">
+              <span>Ask TA</span>
               <i class="fa-solid fa-paper-plane"></i>
             </button>
           </form>
@@ -672,58 +790,64 @@
       </div>
 
       <!-- ================= TAB CONTENT 6: EXPORT & PRINT ================= -->
-      <div id="tabContent_export" class="tab-content hidden space-y-4">
+      <div id="tabContent_export" class="tab-content hidden space-y-5">
         
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
           <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">
+            <h3 class="font-heading font-black text-xl text-slate-900 dark:text-white mb-1">
               Export Study Kit & Offline Revision Pack
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Download your complete questions, explanations, and formulas to study without an internet connection
+              Download your complete question bank and formulas to revise offline before stepping into the exam hall
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             
-            <!-- Export Markdown -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex flex-col justify-between">
-              <div class="space-y-2">
-                <i class="fa-brands fa-markdown text-2xl text-blue-500"></i>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Markdown Notes (.md)</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                  Formatted Markdown notes with all formulas, summaries, and full question bank with answers.
+            <!-- Markdown -->
+            <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/40 flex flex-col justify-between hover:border-blue-500 transition group">
+              <div class="space-y-3">
+                <span class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-xl">
+                  <i class="fa-brands fa-markdown"></i>
+                </span>
+                <h4 class="font-heading font-extrabold text-sm text-slate-900 dark:text-white">Markdown Notes (.md)</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Formatted Markdown notes containing full overview, formulas, deep dives, and all MCQs with answers.
                 </p>
               </div>
-              <button id="btnExportMarkdown" class="mt-4 px-3 py-2 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center gap-1.5">
+              <button id="btnExportMarkdown" class="mt-5 px-4 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center gap-2 shadow-sm active:scale-95">
                 <i class="fa-solid fa-download"></i> Download Markdown
               </button>
             </div>
 
-            <!-- Export JSON -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex flex-col justify-between">
-              <div class="space-y-2">
-                <i class="fa-solid fa-file-code text-2xl text-emerald-500"></i>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Structured JSON (.json)</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                  Full machine-readable kit including MCQs, options, difficulty tags, and flashcards.
+            <!-- JSON -->
+            <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/40 flex flex-col justify-between hover:border-emerald-500 transition group">
+              <div class="space-y-3">
+                <span class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-xl">
+                  <i class="fa-solid fa-file-code"></i>
+                </span>
+                <h4 class="font-heading font-extrabold text-sm text-slate-900 dark:text-white">Structured JSON (.json)</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Machine-readable question bank with difficulty tags, explanation keys, and flashcard pairs.
                 </p>
               </div>
-              <button id="btnExportJson" class="mt-4 px-3 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-1.5">
+              <button id="btnExportJson" class="mt-5 px-4 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-2 shadow-sm active:scale-95">
                 <i class="fa-solid fa-download"></i> Download JSON
               </button>
             </div>
 
-            <!-- Print / Save as PDF -->
-            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex flex-col justify-between">
-              <div class="space-y-2">
-                <i class="fa-solid fa-print text-2xl text-purple-500"></i>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Print Revision Sheet</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                  Formatted clean print layout for hardcopy exam revision and formula cheat sheets.
+            <!-- Print -->
+            <div class="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/40 flex flex-col justify-between hover:border-purple-500 transition group">
+              <div class="space-y-3">
+                <span class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 flex items-center justify-center text-xl">
+                  <i class="fa-solid fa-print"></i>
+                </span>
+                <h4 class="font-heading font-extrabold text-sm text-slate-900 dark:text-white">Print Revision Sheet</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Clean, print-optimized formula cheat sheet and high-yield summary for offline study.
                 </p>
               </div>
-              <button onclick="window.print()" class="mt-4 px-3 py-2 text-xs font-bold rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition flex items-center justify-center gap-1.5">
+              <button onclick="window.print()" class="mt-5 px-4 py-2.5 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition flex items-center justify-center gap-2 shadow-sm active:scale-95">
                 <i class="fa-solid fa-print"></i> Print Cheat Sheet
               </button>
             </div>
@@ -737,56 +861,55 @@
 
   </main>
 
-  <!-- ================= SUBMISSION RESULTS MODAL ================= -->
-  <div id="resultsModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+  <!-- ================= RESULTS & SCORECARD MODAL ================= -->
+  <div id="resultsModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass-card rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative border-2 border-blue-500/30">
       
-      <!-- Close button -->
-      <button id="btnCloseResultsModal" class="absolute top-4 right-4 w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center">
+      <button id="btnCloseResultsModal" class="absolute top-4 right-4 w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
 
-      <!-- Trophy / Badge Icon -->
+      <!-- Badge Icon -->
       <div class="text-center space-y-2">
-        <div id="resultBadgeIcon" class="w-16 h-16 mx-auto rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-600 flex items-center justify-center text-3xl shadow-inner">
+        <div id="resultBadgeIcon" class="w-20 h-20 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-950 text-amber-500 flex items-center justify-center text-4xl shadow-lg shadow-amber-500/20">
           <i class="fa-solid fa-award"></i>
         </div>
-        <h3 id="resultTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+        <h3 id="resultTitle" class="font-heading font-black text-2xl text-slate-900 dark:text-white">
           NPTEL Exam Scorecard
         </h3>
-        <p id="resultTierText" class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+        <p id="resultTierText" class="text-xs font-black uppercase tracking-wider gradient-text-gold">
           Elite + Silver Certificate Tier
         </p>
       </div>
 
-      <!-- Score Metrics Grid -->
-      <div class="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+      <!-- Metrics -->
+      <div class="grid grid-cols-3 gap-3 bg-slate-100/70 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
         <div class="text-center">
-          <span class="text-xs text-slate-500 font-medium block">Total Score</span>
-          <span id="resTotalScore" class="text-xl font-extrabold text-blue-600 dark:text-blue-400">8 / 10</span>
+          <span class="text-xs text-slate-500 font-semibold block">Total Score</span>
+          <span id="resTotalScore" class="font-heading font-black text-xl text-blue-600 dark:text-blue-400">8 / 10</span>
         </div>
         <div class="text-center border-x border-slate-200 dark:border-slate-700">
-          <span class="text-xs text-slate-500 font-medium block">Accuracy</span>
-          <span id="resAccuracy" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">80%</span>
+          <span class="text-xs text-slate-500 font-semibold block">Accuracy</span>
+          <span id="resAccuracy" class="font-heading font-black text-xl text-emerald-600 dark:text-emerald-400">80%</span>
         </div>
         <div class="text-center">
-          <span class="text-xs text-slate-500 font-medium block">Time Taken</span>
-          <span id="resTimeTaken" class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">04:12</span>
+          <span class="text-xs text-slate-500 font-semibold block">Time Taken</span>
+          <span id="resTimeTaken" class="font-heading font-black text-xl text-indigo-600 dark:text-indigo-400 font-mono">04:12</span>
         </div>
       </div>
 
-      <!-- Feedback / Criteria note -->
-      <div id="resultFeedback" class="text-xs text-slate-600 dark:text-slate-300 bg-blue-50 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-200 dark:border-blue-900/60 leading-relaxed">
-        Great performance! You have scored above the NPTEL 75% Elite+Silver threshold.
+      <!-- Feedback note -->
+      <div id="resultFeedback" class="text-xs text-slate-700 dark:text-slate-300 bg-blue-50/80 dark:bg-blue-950/40 p-4 rounded-xl border border-blue-200 dark:border-blue-900 leading-relaxed font-medium">
+        Great performance! You scored above the NPTEL Elite threshold.
       </div>
 
-      <!-- Modal Action Buttons -->
+      <!-- Buttons -->
       <div class="flex gap-3">
-        <button id="btnReviewAnswersFromModal" class="flex-1 py-3 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-magnifying-glass"></i> Review Answers & Solutions
+        <button id="btnReviewAnswersFromModal" class="flex-1 py-3 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/25">
+          <i class="fa-solid fa-magnifying-glass"></i> Review Detailed Solutions
         </button>
-        <button id="btnRetakeFromModal" class="px-4 py-3 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition">
-          Retake
+        <button id="btnRetakeFromModal" class="px-4 py-3 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition">
+          Retake Test
         </button>
       </div>
 
@@ -794,48 +917,48 @@
   </div>
 
   <!-- ================= GEMINI API KEY MODAL ================= -->
-  <div id="apiKeyModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+  <div id="apiKeyModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border border-slate-200 dark:border-slate-800">
       
-      <button id="btnCloseApiKeyModal" class="absolute top-4 right-4 w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center">
+      <button id="btnCloseApiKeyModal" class="absolute top-4 right-4 w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
 
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-lg">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center text-lg shadow-sm">
           <i class="fa-solid fa-key"></i>
         </div>
         <div>
-          <h3 class="text-base font-bold text-slate-900 dark:text-white">Google Gemini API Key</h3>
+          <h3 class="font-heading font-extrabold text-base text-slate-900 dark:text-white">Google Gemini API Key</h3>
           <p class="text-xs text-slate-500">Free, fast, and private AI processing</p>
         </div>
       </div>
 
       <div class="space-y-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
         <p>
-          You can get a <strong>100% free API key</strong> from Google AI Studio in 30 seconds with just your Google account (no credit card required).
+          You can get a <strong>100% free API key</strong> from Google AI Studio in 30 seconds with your standard Google account (no credit card required).
         </p>
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold hover:underline">
           <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          <span>Get Free API Key from Google AI Studio</span>
+          <span>Get Free Key from Google AI Studio &rarr;</span>
         </a>
       </div>
 
       <div class="space-y-2">
-        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-          Enter Your API Key:
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+          Paste Your Gemini API Key:
         </label>
-        <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="w-full text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="w-full text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
         <p class="text-[11px] text-slate-400">
-          Key is stored safely in your browser's local storage and used only for your requests.
+          Stored securely in browser localStorage only. Never sent to any third party.
         </p>
       </div>
 
       <div class="flex gap-2 pt-2">
-        <button id="btnSaveApiKey" class="flex-1 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition">
+        <button id="btnSaveApiKey" class="flex-1 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm">
           Save Key
         </button>
-        <button id="btnClearApiKey" class="px-3 py-2.5 text-xs font-semibold rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+        <button id="btnClearApiKey" class="px-4 py-2.5 text-xs font-bold rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
           Remove
         </button>
       </div>
@@ -844,15 +967,15 @@
   </div>
 
   <!-- ================= FOOTER ================= -->
-  <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+  <footer class="mt-auto border-t border-slate-200/80 dark:border-slate-800/80 glass-nav py-6 text-center text-xs text-slate-500 dark:text-slate-400">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <span class="font-bold text-slate-700 dark:text-slate-300">NPTEL PrepMaster AI</span>
+        <span class="font-heading font-extrabold text-slate-800 dark:text-slate-200">NPTEL PrepMaster AI</span>
         <span>•</span>
-        <span>Empowering engineering students across India</span>
+        <span>Empowering students across India for IIT / IISc certifications</span>
       </div>
-      <div>
-        Built with Google Gemini & FastAPI • Prepared for NPTEL / SWAYAM Proctored Exams
+      <div class="text-[11px]">
+        Built with Google Gemini & FastAPI • Tailored for TCS iON Proctored Exam Format
       </div>
     </div>
   </footer>
